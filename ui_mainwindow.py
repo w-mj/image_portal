@@ -17,8 +17,8 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QFormLayout, QHBoxLayout,
-    QLayout, QListView, QMainWindow, QPushButton,
-    QSizePolicy, QVBoxLayout, QWidget)
+    QHeaderView, QLayout, QMainWindow, QPushButton,
+    QSizePolicy, QTableView, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -48,7 +48,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addWidget(self.host_select)
 
-        self.image_list = QListView(self.centralwidget)
+        self.image_list = QTableView(self.centralwidget)
         self.image_list.setObjectName(u"image_list")
 
         self.verticalLayout.addWidget(self.image_list)

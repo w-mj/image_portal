@@ -4,11 +4,90 @@ from typing import Union, Any
 
 import PySide6.QtCore
 
-from endpoints.endpoint import HostItem
+from endpoints.docker_cli_endpoint import DockerCLIEndpoint
 from ui_host_manager_dialog import Ui_Dialog
 from PySide6.QtWidgets import QDialog
-from PySide6.QtCore import QAbstractListModel, QModelIndex, QModelRoleData
+from PySide6.QtCore import QAbstractListModel, QAbstractTableModel, QModelIndex, QModelRoleData
 from PySide6.QtCore import Qt
+
+
+class HostImageModel(QAbstractTableModel):
+    def data(self, index: Union[PySide6.QtCore.QModelIndex, PySide6.QtCore.QPersistentModelIndex],
+             role: int = ...) -> Any:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if index.column() == 0:
+                return "1"
+            elif index.column() == 1:
+                return self.host_list[index.row()].name()
+            elif index.column() == 2:
+                return self.host_list[index.row()].hash()
+            elif index.column() == 3:
+                return self.host_list[index.row()].size()
+        return None
+
+    def rowCount(self, parent: Union[PySide6.QtCore.QModelIndex, PySide6.QtCore.QPersistentModelIndex] = ...) -> int:
+        return len(self.host_list)
+
+    def columnCount(self, parent=...):
+        return 4
+
+    def __init__(self, host_list):
+        super().__init__()
+        self.host_list = host_list
+
+
+class HostItem:
+    def __init__(self, d=None):
+        if d is None:
+            d = dict()
+        self._data = d
+        self._endpoint = None
+        self._image_list = []
+        self._model = None
+
+    def get_name(self):
+        return self._data.get("name", self._data.get("addr", "unnamed"))
+
+    def get(self, key):
+        return self._data.get(key, "")
+
+    def set(self, key, value):
+        self._data[key] = value
+
+    def get_type(self):
+        return self.get("type")
+
+    def get_user(self):
+        return self.get("user")
+
+    def get_pass(self):
+        return self.get("pass")
+
+    def get_addr(self):
+        return self.get("addr")
+
+    def data(self):
+        return self._data
+
+    def get_endpoint(self):
+        if self._endpoint and self._endpoint.type == self.get_type():
+            return self._endpoint
+        if self.get_type() == "Docker CLI":
+            self._endpoint = DockerCLIEndpoint(self.get_type(), self.get_addr(), self.get_user(), self.get_pass())
+        else:
+            raise RuntimeError("Unknown host type " + self.get_type())
+        return self._endpoint
+
+    def refresh_images(self):
+        model = self.get_endpoint()
+        self._image_list = model.get_images()
+        if self._model:
+            self._model.dataChanged.emit(QModelIndex(), 0, self._model.rowCount())
+
+    def get_images_model(self):
+        if not self._model:
+            self._model = HostImageModel(self._image_list)
+        return self._model
 
 
 class HostListModel(QAbstractListModel):
@@ -58,6 +137,8 @@ class HostManager:
 
         current_select = 0
 
+        ui.host_type.textActivated.connect(lambda x: self.host_list[current_select].set("type", x))
+
         def change_current_edit(i):
             nonlocal current_select
             current_select = i
@@ -85,7 +166,10 @@ class HostManager:
 
         def add_blank_item():
             model.beginInsertRows(QModelIndex(), model.rowCount(), model.rowCount() + 1)
-            self.host_list.append(HostItem({"name": "new" + str(len(self.host_list))}))
+            self.host_list.append(HostItem({
+                "name": "new" + str(len(self.host_list)),
+                "type": ui.host_type.currentText()
+            }))
             model.endInsertRows()
             change_current_edit(model.rowCount() - 1)
 

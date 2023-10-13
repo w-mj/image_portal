@@ -1,2 +1,2 @@
-import endpoint
-import docker_cli_endpoint
+import endpoints.endpoint
+import endpoints.docker_cli_endpoint

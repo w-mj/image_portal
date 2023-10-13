@@ -30,7 +30,7 @@
        <widget class="QComboBox" name="host_select"/>
       </item>
       <item>
-       <widget class="QListView" name="image_list"/>
+       <widget class="QTableView" name="image_list"/>
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
