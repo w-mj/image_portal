@@ -30,22 +30,30 @@ class HostManager:
     def __init__(self):
         self.host_list = []
         self.load_from_file()
+        self.model = HostListModel(self.host_list)
 
     def save_to_file(self):
-        json.dump(self.host_list, open("image_transfer.json", "w", encoding='utf8'))
+        json.dump([x.data() for x in self.host_list], open("image_transfer.json", "w", encoding='utf8'))
 
     def load_from_file(self):
         try:
             self.host_list = json.load(open("image_transfer.json", encoding='utf8'))
+            self.host_list = [HostItem(x) for x in self.host_list]
         except FileNotFoundError:
             pass
+        except json.decoder.JSONDecodeError as e:
+            print("load from json error ", e)
+            pass
+
+    def get_model(self):
+        return self.model
 
     def show(self, parent=None):
         dialog = QDialog(parent)
         ui = Ui_Dialog()
         ui.setupUi(dialog)
 
-        model = HostListModel(self.host_list)
+        model = self.get_model()
         ui.host_list.setModel(model)
 
         current_select = 0

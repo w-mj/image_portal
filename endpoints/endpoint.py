@@ -3,6 +3,9 @@ from abc import abstractmethod
 from typing import List, IO, AnyStr
 
 
+endpoint_factory = {}
+
+
 class Image:
     def __init__(self, name, size, _hash):
         self._name = name
@@ -23,16 +26,17 @@ class HostItem:
     def __init__(self, d=None):
         if d is None:
             d = dict()
-        self.data = d
+        self._data = d
+        self._endpoint = None
 
     def get_name(self):
-        return self.data.get("name", self.data.get("addr", "unnamed"))
+        return self._data.get("name", self._data.get("addr", "unnamed"))
 
     def get(self, key):
-        return self.data.get(key, "")
+        return self._data.get(key, "")
 
     def set(self, key, value):
-        self.data[key] = value
+        self._data[key] = value
 
     def get_type(self):
         return self.get("type")
@@ -46,10 +50,25 @@ class HostItem:
     def get_addr(self):
         return self.get("addr")
 
+    def data(self):
+        return self._data
+
+    def get_endpoint(self):
+        if self._endpoint and self._endpoint.type == self.get_type():
+            return
+        self._endpoint = endpoint_factory[self.get_type()]
+        return self._endpoint
+
+    def refresh_images(self):
+        pass
+
+    def get_images_model(self):
+        pass
+
 
 class Endpoint:
     def __init__(self, host: HostItem):
-        pass
+        self.type = host.get_type()
 
     @abstractmethod
     def get_images(self) -> List[Image]:

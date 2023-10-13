@@ -3,11 +3,32 @@ import subprocess
 from typing import IO, AnyStr, List
 
 import paramiko
+from paramiko.channel import ChannelFile
 
-from endpoints.endpoint import Endpoint, HostItem, Image
+from endpoints.endpoint import Endpoint, HostItem, Image, endpoint_factory
+
+endpoint_factory["Docker CLI"] = lambda h: DockerCLIEndpoint(h)
+
+class SSHChannel(IO[AnyStr]):
+    def __init__(self, chan: ChannelFile):
+        self.chan = chan
+
+    def close(self) -> None:
+        self.chan.close()
+
+    def read(self, __n: int = ...) -> AnyStr:
+        return self.chan.read(__n)
+
+    def write(self, __s: AnyStr) -> int:
+        self.chan.write(__s)
+        return len(__s)
 
 
 class DockerCLIEndpoint(Endpoint):
+    def error(self) -> str:
+        return ""
+
+
     def _parse_size(self, size: str) -> float:
         units = ["GB", "MB", "KB", "B"]
         factor = [1 << 30, 1 << 20, 1 << 10, 1]
@@ -39,19 +60,23 @@ class DockerCLIEndpoint(Endpoint):
             return x[0], int(x[1])
         return addr, 22
 
+    def _connect_ssh(self):
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        addr, port = self._separate_addr(self.host.get_addr())
+        ssh.connect(
+            hostname=addr,
+            port=port,
+            username=self.host.get_user(),
+            password=self.host.get_pass()
+        )
+        return ssh
+
     def get_images(self) -> List[Image]:
         if self.host.get_addr() == "localhost":
             data = subprocess.check_output(["docker", "images", "--format", "json"]).decode()
         else:
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            addr, port = self._separate_addr(self.host.get_addr())
-            ssh.connect(
-                hostname=addr,
-                port=port,
-                username=self.host.get_user(),
-                password=self.host.get_pass()
-            )
+            ssh = self._connect_ssh()
             _, stdout, stderr = ssh.exec_command("docker images --format json")
             stderr = stderr.read().decode()
             if stderr:
@@ -60,10 +85,22 @@ class DockerCLIEndpoint(Endpoint):
         return self._parse_docker_images(data)
 
     def get_image_stream(self, image: Image) -> IO[AnyStr]:
-        pass
+        if self.host.get_addr() == "localhost":
+            pro = subprocess.Popen(["docker", "save", image.name()], stdout=subprocess.PIPE)
+            return pro.stdout
+        else:
+            ssh = self._connect_ssh()
+            _, stdout, _ = ssh.exec_command(f"docker save {image.name}")
+            return SSHChannel(stdout)
 
     def create_image_stream(self, image: Image) -> IO[AnyStr]:
-        pass
+        if self.host.get_addr() == "localhost":
+            pro = subprocess.Popen(["docker", "load"], stdin=subprocess.PIPE)
+            return pro.stdin
+        else:
+            ssh = self._connect_ssh()
+            stdin, _, _ = ssh.exec_command(f"docker load")
+            return SSHChannel(stdin)
 
     def __init__(self, host: HostItem):
         super().__init__(host)
