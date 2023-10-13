@@ -1,8 +1,10 @@
 # This Python file uses the following encoding: utf-8
+import json
 from typing import Union, Any
 
 import PySide6.QtCore
 
+from endpoints.endpoint import HostItem
 from ui_host_manager_dialog import Ui_Dialog
 from PySide6.QtWidgets import QDialog
 from PySide6.QtCore import QAbstractListModel, QModelIndex, QModelRoleData
@@ -24,25 +26,19 @@ class HostListModel(QAbstractListModel):
         self.host_list = host_list
 
 
-class HostItem:
-    def __init__(self, d=None):
-        if d is None:
-            d = dict()
-        self.data = d
-
-    def get_name(self):
-        return self.data.get("name", self.data.get("addr", "unnamed"))
-
-    def get(self, key):
-        return self.data.get(key, "")
-
-    def set(self, key, value):
-        self.data[key] = value
-
-
 class HostManager:
     def __init__(self):
         self.host_list = []
+        self.load_from_file()
+
+    def save_to_file(self):
+        json.dump(self.host_list, open("image_transfer.json", "w", encoding='utf8'))
+
+    def load_from_file(self):
+        try:
+            self.host_list = json.load(open("image_transfer.json", encoding='utf8'))
+        except FileNotFoundError:
+            pass
 
     def show(self, parent=None):
         dialog = QDialog(parent)
@@ -86,7 +82,12 @@ class HostManager:
             change_current_edit(model.rowCount() - 1)
 
         ui.host_add_btn.clicked.connect(add_blank_item)
-        ui.host_save_btn.clicked.connect(lambda: model.dataChanged.emit(QModelIndex(), current_select, current_select))
+
+        def save():
+            model.dataChanged.emit(QModelIndex(), current_select, current_select)
+            self.save_to_file()
+
+        ui.host_save_btn.clicked.connect(save)
 
         def delete_item():
             model.beginRemoveRows(QModelIndex(), current_select, current_select)
