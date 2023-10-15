@@ -1,12 +1,15 @@
 from abc import abstractmethod
 from typing import List, IO, AnyStr
 
+import utils
+
 
 class Image:
-    def __init__(self, name, size, _hash):
+    def __init__(self, endpoint, name, size, _hash):
         self._name = name
         self._size = size
         self._hash = _hash
+        self.endpoint = endpoint
 
     def name(self):
         return self._name
@@ -16,6 +19,12 @@ class Image:
 
     def hash(self):
         return self._hash
+
+    def size_str(self) -> str:
+        return utils.size_str(self.size())
+
+    def get_stream(self) -> IO[AnyStr]:
+        return self.endpoint.get_image_stream(self)
 
 
 class Endpoint:

@@ -12,28 +12,55 @@ from PySide6.QtCore import Qt
 
 
 class HostImageModel(QAbstractTableModel):
+    def __init__(self, host_list):
+        super().__init__()
+        self.image_list = host_list
+        self._check_stats = {}
+
+    def setData(self, index: Union[PySide6.QtCore.QModelIndex, PySide6.QtCore.QPersistentModelIndex], value: Any,
+                role: int = ...) -> bool:
+        if index.column() == 0 and role == Qt.ItemDataRole.CheckStateRole:
+            self._check_stats[self.image_list[index.row()].name()] = Qt.CheckState.Checked if value > 0 else Qt.CheckState.Unchecked
+            return True
+        return False
+
+    def flags(self, index: Union[PySide6.QtCore.QModelIndex, PySide6.QtCore.QPersistentModelIndex]) -> PySide6.QtCore.Qt.ItemFlag:
+        if not index.isValid():
+            return super().flags(index)
+        flag = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
+        if index.column() == 0:
+            flag |= Qt.ItemFlag.ItemIsUserCheckable
+        return flag
+
+    def headerData(self, section: int, orientation: PySide6.QtCore.Qt.Orientation, role: int = ...) -> Any:
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+            return ["选择", "镜像名", "ID", "大小"][section]
+        return super().headerData(section, orientation, role)
+
     def data(self, index: Union[PySide6.QtCore.QModelIndex, PySide6.QtCore.QPersistentModelIndex],
              role: int = ...) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
             if index.column() == 0:
-                return "1"
+                return ""
             elif index.column() == 1:
-                return self.host_list[index.row()].name()
+                return self.image_list[index.row()].name()
             elif index.column() == 2:
-                return self.host_list[index.row()].hash()
+                return self.image_list[index.row()].hash()
             elif index.column() == 3:
-                return self.host_list[index.row()].size()
+                return str(self.image_list[index.row()].size_str())
+        elif role == Qt.ItemDataRole.CheckStateRole:
+            if index.column() == 0:
+                return self._check_stats.get(self.image_list[index.row()].name(), Qt.CheckState.Unchecked)
         return None
 
     def rowCount(self, parent: Union[PySide6.QtCore.QModelIndex, PySide6.QtCore.QPersistentModelIndex] = ...) -> int:
-        return len(self.host_list)
+        return len(self.image_list)
 
     def columnCount(self, parent=...):
         return 4
 
-    def __init__(self, host_list):
-        super().__init__()
-        self.host_list = host_list
+    def get_selected(self):
+        return [x for x in self.image_list if self._check_stats.get(x.name(), Qt.CheckState.Unchecked) == Qt.CheckState.Checked]
 
 
 class HostItem:
@@ -81,6 +108,7 @@ class HostItem:
     def refresh_images(self):
         model = self.get_endpoint()
         self._image_list = model.get_images()
+        self._image_list = sorted(self._image_list, key=lambda x: x.name())
         if self._model:
             self._model.dataChanged.emit(QModelIndex(), 0, self._model.rowCount())
 

@@ -45,6 +45,7 @@ class DockerCLIEndpoint(Endpoint):
                 continue
             j = json.loads(line)
             img = Image(
+                self,
                 f'{j.get("Repository")}:{j.get("Tag")}',
                 self._parse_size(j.get("Size")),
                 j.get("ID"),
