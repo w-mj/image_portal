@@ -1,5 +1,7 @@
 import json
 import subprocess
+import sys
+import threading
 from typing import IO, AnyStr, List
 
 import paramiko
@@ -80,16 +82,20 @@ class DockerCLIEndpoint(Endpoint):
             stderr = stderr.read().decode()
             if stderr:
                 raise RuntimeError(stderr)
-            data = stdout.read()
+            data = stdout.read().decode()
         return self._parse_docker_images(data)
 
     def get_image_stream(self, image: Image) -> IO[AnyStr]:
         if self.addr == "localhost":
             pro = subprocess.Popen(["docker", "save", image.name()], stdout=subprocess.PIPE)
-            return pro.stdout
+            gz_pro = subprocess.Popen(["gzip"], stdin=pro.stdout, stdout=subprocess.PIPE)
+            return gz_pro.stdout
         else:
             ssh = self._connect_ssh()
-            _, stdout, _ = ssh.exec_command(f"docker save {image.name}")
+            _, stdout, stderr = ssh.exec_command(f"docker save {image.name()} | gzip")
+            def load_stderr():
+                print(stderr.read().decode(), file=sys.stderr)
+            threading.Thread(target=load_stderr).start()
             return SSHChannel(stdout)
 
     def create_image_stream(self, image: Image) -> IO[AnyStr]:
