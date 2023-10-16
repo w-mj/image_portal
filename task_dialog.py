@@ -3,7 +3,6 @@ import threading
 from abc import abstractmethod
 from typing import List, Any
 
-import atomics
 from PySide6.QtWidgets import QDialog
 from PySide6.QtCore import Signal
 
@@ -17,7 +16,7 @@ class TaskDialog(QDialog):
     progress_maximum_signal = Signal(int)
     progress_value_signal = Signal(int)
     progress_add_log_signal = Signal(str)
-    progress_update_task_signal = Signal(Any)
+    progress_update_task_signal = Signal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)

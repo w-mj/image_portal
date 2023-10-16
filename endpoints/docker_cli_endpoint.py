@@ -34,8 +34,8 @@ class DockerCLIEndpoint(Endpoint):
         factor = [1 << 30, 1 << 20, 1 << 10, 1]
         for i in range(len(units)):
             u = units[i]
-            if u in size:
-                size = size.replace(u, "")
+            if u.lower() in size.lower():
+                size = size.lower().replace(u.lower(), "")
                 return float(size) * factor[i]
         return float(size)
 
