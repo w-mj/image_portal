@@ -52,6 +52,8 @@ class DockerCLIEndpoint(Endpoint):
                 self._parse_size(j.get("Size")),
                 j.get("ID"),
             )
+            if "<none>" in img.name():
+                continue
             ans.append(img)
         return ans
 

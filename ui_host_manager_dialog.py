@@ -105,6 +105,14 @@ class Ui_Dialog(object):
 
         self.horizontalLayout.addWidget(self.host_save_btn)
 
+        QWidget.setTabOrder(self.host_list, self.host_type)
+        QWidget.setTabOrder(self.host_type, self.host_name)
+        QWidget.setTabOrder(self.host_name, self.host_addr)
+        QWidget.setTabOrder(self.host_addr, self.host_user)
+        QWidget.setTabOrder(self.host_user, self.host_pass)
+        QWidget.setTabOrder(self.host_pass, self.host_add_btn)
+        QWidget.setTabOrder(self.host_add_btn, self.host_delete_btn)
+        QWidget.setTabOrder(self.host_delete_btn, self.host_save_btn)
 
         self.retranslateUi(Dialog)
 

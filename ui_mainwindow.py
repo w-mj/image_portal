@@ -60,6 +60,11 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.host_manager_btn)
 
+        self.refresh_btn = QPushButton(self.centralwidget)
+        self.refresh_btn.setObjectName(u"refresh_btn")
+
+        self.horizontalLayout.addWidget(self.refresh_btn)
+
         self.save_to_file_btn = QPushButton(self.centralwidget)
         self.save_to_file_btn.setObjectName(u"save_to_file_btn")
 
@@ -94,6 +99,7 @@ class Ui_MainWindow(object):
         self.actionAbout.setText(QCoreApplication.translate("MainWindow", u"\u5173\u4e8e", None))
         self.actionExit.setText(QCoreApplication.translate("MainWindow", u"\u9000\u51fa", None))
         self.host_manager_btn.setText(QCoreApplication.translate("MainWindow", u"\u4e3b\u673a\u7ba1\u7406", None))
+        self.refresh_btn.setText(QCoreApplication.translate("MainWindow", u"\u5237\u65b0\u955c\u50cf\u5217\u8868", None))
         self.save_to_file_btn.setText(QCoreApplication.translate("MainWindow", u"\u4fdd\u5b58\u4e3a\u6587\u4ef6", None))
         self.load_from_file_btn.setText(QCoreApplication.translate("MainWindow", u"\u4ece\u6587\u4ef6\u5bfc\u5165", None))
         self.sync_to_host_htn.setText(QCoreApplication.translate("MainWindow", u"\u540c\u6b65\u5230\u4e3b\u673a", None))

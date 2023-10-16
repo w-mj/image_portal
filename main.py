@@ -22,6 +22,7 @@ class MainWindow(QMainWindow):
         self.ui.save_to_file_btn.clicked.connect(self.on_save_image_click)
         self.ui.load_from_file_btn.clicked.connect(self.on_load_image_click)
         self.ui.sync_to_host_htn.clicked.connect(self.on_sync_image_click)
+        self.ui.refresh_btn.clicked.connect(self.update_ui)
         self.model = None
         self.host_index = 0
         if len(host_manager.host_list) > 0:

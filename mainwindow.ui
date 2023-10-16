@@ -42,6 +42,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="refresh_btn">
+          <property name="text">
+           <string>刷新镜像列表</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="save_to_file_btn">
           <property name="text">
            <string>保存为文件</string>

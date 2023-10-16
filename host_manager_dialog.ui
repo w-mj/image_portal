@@ -125,6 +125,17 @@
    </layout>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>host_list</tabstop>
+  <tabstop>host_type</tabstop>
+  <tabstop>host_name</tabstop>
+  <tabstop>host_addr</tabstop>
+  <tabstop>host_user</tabstop>
+  <tabstop>host_pass</tabstop>
+  <tabstop>host_add_btn</tabstop>
+  <tabstop>host_delete_btn</tabstop>
+  <tabstop>host_save_btn</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
